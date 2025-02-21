@@ -20,7 +20,7 @@ jobs:
           cache-dependency-glob: "web/uv.lock"
 
       - name: Install the project
-        run: uv sync --all-extras --dev
+        run: cd web && uv sync --all-extras --dev
 
       - name: Lint
-        run: uv run ruff check .
+        run: cd web && uv run ruff check .
