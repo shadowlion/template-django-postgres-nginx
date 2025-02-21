@@ -1,11 +1,11 @@
 services:
   web:
     build:
-      context: .
+      context: ./web
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./web:/app
     depends_on:
       - db
     env_file:
