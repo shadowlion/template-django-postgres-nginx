@@ -25,12 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-c4_vbz2nycqm@p2%dr1n&2hj#cel5bjfcj15ldy%+=yy2fh3n_"
+SECRET_KEY = env.str(
+    "DJANGO_SECRET_KEY",
+    default="django-insecure-c4_vbz2nycqm@p2%dr1n&2hj#cel5bjfcj15ldy%+=yy2fh3n_",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DJANGO_DEBUG", default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost"])
 
 
 # Application definition
@@ -81,9 +84,9 @@ WSGI_APPLICATION = "project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres",
-        "PASSWORD": "postgres",
+        "NAME": env.str("POSTGRES_NAME", default="postgres"),
+        "USER": env.str("POSTGRES_USER", default="postgres"),
+        "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
         "HOST": "db",  # set in compose.yaml
         "PORT": 5432,  # default postgres port
     }
@@ -93,19 +96,15 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
+VALIDATORS = [
+    "UserAttributeSimilarityValidator",
+    "MinimumLengthValidator",
+    "CommonPasswordValidator",
+    "NumericPasswordValidator",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": f"django.contrib.auth.password_validation.{v}" for v in VALIDATORS},
 ]
 
 
