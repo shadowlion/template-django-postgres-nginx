@@ -1,0 +1,14 @@
+.venv
+
+.git
+.gitignore
+
+.dockerignore
+Dockerfile
+
+*.md
+
+staticfiles/
+
+.env
+.python-version

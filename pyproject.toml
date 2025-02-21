@@ -1,0 +1,15 @@
+[project]
+name = "example-django"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.1.4",
+    "environs[django]>=11.2.1",
+    "gunicorn>=23.0.0",
+    "psycopg[binary]>=3.2.3",
+]
+
+[dependency-groups]
+dev = ["django-debug-toolbar>=5.0.1", "ruff>=0.9.4"]
