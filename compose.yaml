@@ -8,7 +8,9 @@ services:
     volumes:
       - ./web:/app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+        restart: true
     env_file:
       - .env
 
