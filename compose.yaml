@@ -11,14 +11,22 @@ services:
       - db
     env_file:
       - .env
+
   db:
     image: postgres:latest
-    container_name: postgres_db
+    container_name: postgres_db_django
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
   nginx:
     image: nginx:latest
     container_name: nginx_proxy
