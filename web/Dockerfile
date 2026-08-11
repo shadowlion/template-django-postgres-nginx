@@ -1,51 +1,30 @@
-# Using an image that includes uv
-FROM ghcr.io/astral-sh/uv:python3.13-alpine AS base
+# Stage 1: Build the python dependencies
+FROM python:3.13-slim-bookworm AS build-python
 
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy \
-    UV_PYTHON_DOWNLOADS=never
+# This approximately follows this guide: https://hynek.me/articles/docker-uv/
+# Which creates a standalone environment with the dependencies.
+# - Silence uv complaining about not being able to use hard links,
+# - tell uv to byte-compile packages for faster application startups,
+# - prevent uv from accidentally downloading isolated Python builds,
+# - pick a Python (use `/usr/bin/python3.12` on uv 0.5.0 and later),
+# - and finally declare `/app` as the target for `uv sync`.
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/code/.venv
 
-# Change the working directory to the `app` directory
-WORKDIR /app
+COPY --from=ghcr.io/astral-sh/uv:0.12.3 /uv /uvx /bin/
 
-FROM base AS reqs-compile
+# Since there's no point in shipping lock files, we move them
+# into a directory that is NOT copied into the runtime image.
+# The trailing slash makes COPY create `/_lock/` automagically.
+COPY pyproject.toml uv.lock /_lock/
 
-COPY pyproject.toml uv.lock ./
-
-# Install dependencies
-# RUN --mount=type=cache,target=/root/.cache/uv \
-#   --mount=type=bind,source=uv.lock,target=uv.lock \
-#   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-#   uv sync --frozen --no-install-project --group prod
-
-# Compile to a requirements file
-RUN uv pip compile /app/pyproject.toml --generate-hashes -o /app/requirements.txt
-
-# Use an image without uv to install dependencies and run the server
-FROM python:3.13-alpine AS release
-
-WORKDIR /app
-
-# Set environment variables
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Copy the application from the builder
-COPY --from=reqs-compile --chown=app:app /app/requirements.txt .
-
-RUN pip install -r /app/requirements.txt
-
-COPY . .
-
-# Place executables in the environment at the front of the path
-# ENV PATH="/app/.venv/bin:$PATH" \
-#   PYTHONPATH="/app"
-
-EXPOSE 8000
-
-# Give access permissions to the bash script
-RUN chmod +x /app/entrypoint.sh
-
-# Run the Django application by Gunicorn
-ENTRYPOINT [ "sh", "/app/entrypoint.sh" ]
+# Synchronize dependencies.
+# This layer is cached until uv.lock or pyproject.toml change.
+RUN --mount=type=cache,target=/root/.cache \
+    cd /_lock && \
+    uv sync \
+      --frozen \
+      --no-group dev \
+      --group prod
