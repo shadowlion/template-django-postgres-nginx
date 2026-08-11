@@ -5,12 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "django>=5.0.0",
-    "environs[django]>=11.2.1",
-    "gunicorn>=23.0.0",
-    "psycopg[binary]>=3.2.3",
+    "django>=6.0.0",
+    "environs[django]>=15.0.0",
     "whitenoise>=6.9.0",
 ]
 
 [dependency-groups]
-dev = ["django-debug-toolbar>=6.0.0", "ruff>=0.13.0"]
+dev = ["django-debug-toolbar>=7.0.0", "ruff>=0.16.0"]
+prod = ["gunicorn>=23.0.0", "psycopg[binary]>=3.2.3"]
